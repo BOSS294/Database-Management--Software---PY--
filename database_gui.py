@@ -51,7 +51,10 @@ class DatabaseViewer(ctk.CTk):
         # Table selection
         self.tables_combo = ctk.CTkComboBox(self.frame, values=["No tables available"], state="readonly", width=300)
         self.tables_combo.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
-        self.tables_combo.bind("<<ComboboxSelected>>", self.load_columns)
+
+        # Fetch button
+        self.fetch_button = ctk.CTkButton(self.frame, text="Fetch", command=self.load_table_data, width=150)
+        self.fetch_button.grid(row=4, column=2, padx=10, pady=10, sticky="ew")
 
         # Data table area
         self.table_frame = ctk.CTkFrame(self.frame)
@@ -106,10 +109,10 @@ class DatabaseViewer(ctk.CTk):
 
     def load_tables(self):
         tables = self.db.get_tables()
+        print(f"Loaded tables: {[table[0] for table in tables]}")  # Debugging print statement
         if tables:
             self.tables_combo.configure(values=[table[0] for table in tables])
             self.tables_combo.set(tables[0][0])  # Select the first table by default
-            self.load_columns()
             self.output_label.configure(text="")
         else:
             self.tables_combo.configure(values=["No tables available"])
@@ -117,35 +120,42 @@ class DatabaseViewer(ctk.CTk):
             self.output_label.configure(text="No tables found in the database.")
             self.clear_table()
 
-    def load_columns(self, event=None):
+    def load_table_data(self):
         table_name = self.tables_combo.get()
+        print(f"Table selected: {table_name}")  # Debugging print statement
+
         if table_name == "No tables available":
             return
-        
-        columns = self.db.get_columns(table_name)
-        
+
+        # Clear previous table content
         self.clear_table()
 
+        # Fetch column names and row data
+        columns = self.db.get_columns(table_name)
+        print(f"Columns for {table_name}: {columns}")  # Debugging print statement
+        rows = self.db.get_rows(table_name)
+        print(f"Rows for {table_name}: {rows}")  # Debugging print statement
+
         if columns:
-            for col, column_name in enumerate(columns):
-                header = ctk.CTkLabel(self.table_frame, text=column_name[0])
-                header.grid(row=0, column=col, padx=5, pady=5)
+            # Add column headers
+            for col, column in enumerate(columns):
+                header = ctk.CTkLabel(self.table_frame, text=column[0])
+                header.grid(row=0, column=col, padx=5, pady=5, sticky="ew")
 
-            self.load_data(table_name)
+            # Add row data
+            if rows:
+                for i, row in enumerate(rows):
+                    for j, value in enumerate(row):
+                        cell = ctk.CTkLabel(self.table_frame, text=str(value))
+                        cell.grid(row=i + 1, column=j, padx=5, pady=5, sticky="ew")
+            else:
+                self.output_label.configure(text="No data available in the selected table.", text_color="orange")
 
-    def load_data(self, table_name):
-        cursor = self.db.connection.cursor()
-        cursor.execute(f"SELECT * FROM {table_name}")
-        rows = cursor.fetchall()
-
-        if rows:
-            self.output_label.configure(text="Data from table: " + table_name, text_color="blue")
-            for i, row in enumerate(rows):
-                for j, value in enumerate(row):
-                    cell = ctk.CTkLabel(self.table_frame, text=str(value))
-                    cell.grid(row=i + 1, column=j, padx=5, pady=5)
+            # Adjust column weights to ensure proper alignment
+            for col in range(len(columns)):
+                self.table_frame.grid_columnconfigure(col, weight=1)
         else:
-            self.output_label.configure(text="No data available in the selected table.", text_color="orange")
+            self.output_label.configure(text="No columns available for the selected table.", text_color="orange")
 
     def clear_table(self):
         for widget in self.table_frame.winfo_children():
@@ -177,7 +187,6 @@ class DatabaseViewer(ctk.CTk):
             label.configure(text_color=new_color)
             self.update_idletasks()
             time.sleep(0.05)
-        label.configure(text_color=initial_color)
 
     def fade_color(self, color, alpha):
         if isinstance(color, str):
