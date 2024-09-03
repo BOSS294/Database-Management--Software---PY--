@@ -1,6 +1,7 @@
 # TableSavvy
 
 **TableSavvy** is a user-friendly Python application designed for easy management and visualization of database tables. Built with PyQt5 and MySQL, TableSavvy provides an intuitive graphical interface to connect to MySQL databases, view tables, and manage data seamlessly. This tool is ideal for database administrators, developers, and anyone who needs an efficient way to interact with their database tables.
+![glitch](https://github.com/user-attachments/assets/9ff11f6c-962d-4a2c-9d29-9e5aa95197f3)
 
 ## Features
 
