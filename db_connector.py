@@ -30,6 +30,13 @@ class DatabaseConnector:
             cursor.execute(f"SHOW COLUMNS FROM {table_name}")
             return cursor.fetchall()
 
+    def get_rows(self, table_name):
+        if self.connection.is_connected():
+            cursor = self.connection.cursor()
+            cursor.execute(f"SELECT * FROM {table_name}")
+            return cursor.fetchall()
+
+
     def disconnect(self):
         if self.connection.is_connected():
             self.connection.close()
